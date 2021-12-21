@@ -18,7 +18,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('file', help='Путь к файлу-образцу')
 parser.add_argument('directory', help='Путь к директории, с которой начнется поиск')
 parser.add_argument('-s', '--sensitivity', help='Чувствительность хэширования, от 2 до 8', type=int, default=7)
-parser.add_argument('-d', '--debug', action='store_true')
+parser.add_argument('-d', '--distance', help='Максимальное расстояние Хэмминга', type=int, default=0)
+parser.add_argument('--debug', action='store_true')
 
 VALID_TYPES = ('image/jpeg', 'image/png')
 
@@ -55,11 +56,11 @@ def parse_args():
     if not (2 <= sensitivity <= 8):
         raise SystemExit('Sensitivity must be in range from 2 to 8, you passed: %s' % sensitivity)
 
-    return directory, reference, sensitivity
+    return directory, reference, args.sensitivity, args.distance
 
 
 def main():
-    top, reference, sensitivity = parse_args()
+    top, reference, sensitivity, max_distance = parse_args()
     reference_hash = make_hash(reference, sensitivity)
 
     log.info('Search for images similar to %s', reference.name)
@@ -74,10 +75,12 @@ def main():
 
             if cwd / reference != path and is_image(path):
                 image_hash_ = make_hash(path, sensitivity)
-                log.debug('Image: %s', path.resolve())
-                log.debug('Hash: %s', image_hash_)
+                distance = image_hash_ - reference_hash
 
-                if image_hash_ == reference_hash:
+                log.debug('Image: %s', path.resolve())
+                log.debug('Hash: %s. Distance: %s', image_hash_, distance)
+
+                if distance <= max_distance:
                     found += 1
                     log.info('\nFound match!\nfile://%s\n', path.resolve())
 

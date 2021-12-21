@@ -17,15 +17,16 @@ log.setLevel(logging.INFO)
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='Путь к файлу-образцу')
 parser.add_argument('directory', help='Путь к директории, с которой начнется поиск')
+parser.add_argument('-s', '--sensitivity', help='Чувствительность хэширования, от 2 до 8', type=int, default=7)
 parser.add_argument('-d', '--debug', action='store_true')
 
 VALID_TYPES = ('image/jpeg', 'image/png')
 
 
-def make_hash(path):
+def make_hash(path, sensitivity):
     with path.open(mode='rb') as fh:
         image = Image.open(fh)
-        return phash(image, hash_size=7)
+        return phash(image, hash_size=sensitivity)
 
 
 def is_image(file):
@@ -41,7 +42,7 @@ def parse_args():
 
     directory = Path(args.directory)
 
-    if not directory.exists() and not directory.is_dir():
+    if not directory.exists() or not directory.is_dir():
         raise SystemExit('Directory does not exist: %s' % args.directory)
 
     reference = Path(args.file)
@@ -49,12 +50,17 @@ def parse_args():
     if not reference.exists():
         raise SystemExit('File does not exist: %s' % args.file)
 
-    return directory, reference
+    sensitivity = args.sensitivity
+
+    if not (2 <= sensitivity <= 8):
+        raise SystemExit('Sensitivity must be in range from 2 to 8, you passed: %s' % sensitivity)
+
+    return directory, reference, sensitivity
 
 
 def main():
-    top, reference = parse_args()
-    reference_hash = make_hash(reference)
+    top, reference, sensitivity = parse_args()
+    reference_hash = make_hash(reference, sensitivity)
 
     log.info('Search for images similar to %s', reference.name)
     log.info('Reference hash: %s', reference_hash)
@@ -67,7 +73,7 @@ def main():
             path = cwd / Path(file)
 
             if cwd / reference != path and is_image(path):
-                image_hash_ = make_hash(path)
+                image_hash_ = make_hash(path, sensitivity)
                 log.debug('Image: %s', path.resolve())
                 log.debug('Hash: %s', image_hash_)
 

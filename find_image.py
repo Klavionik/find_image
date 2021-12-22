@@ -82,7 +82,7 @@ def main():
 
                 if distance <= max_distance:
                     found += 1
-                    log.info('\nFound match!\nfile://%s\n', path.resolve())
+                    log.info('\nFound match!\n%s\n', path.resolve().as_uri())
 
                     try:
                         continue_ = input('Continue search? [y/n] ')

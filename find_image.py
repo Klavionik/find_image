@@ -66,6 +66,7 @@ def main():
     log.info('Search for images similar to %s', reference.name)
     log.info('Reference hash: %s', reference_hash)
 
+    processed = 0
     found = 0
 
     for dirname, _, files in os.walk(top):
@@ -93,6 +94,9 @@ def main():
                     if continue_ in ('n', 'no'):
                         log.info('Found %s similar images.', found)
                         sys.exit()
+
+            processed += 1
+            print('Processed %s images' % processed, end='\r')
 
     log.info('Found %s similar images.', found)
 

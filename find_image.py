@@ -4,7 +4,6 @@ import argparse
 import logging
 import mimetypes
 import os
-import sys
 from pathlib import Path
 from typing import Tuple, Optional, Iterator
 
@@ -58,6 +57,22 @@ def next_image(top: Path, reference_path: Path, excluded: list) -> Iterator[Path
                 yield filepath.resolve()
 
 
+def ask_if_continue():
+    kbinterrupt = False
+    answer = None
+
+    try:
+        answer = input('Continue search? [y/n] ')
+    except KeyboardInterrupt:
+        # This is just to make a consistent
+        # amount of newlines.
+        print()
+        kbinterrupt = True
+
+    if kbinterrupt or answer in ('n', 'no'):
+        raise SystemExit
+
+
 def parse_args() -> Tuple[Path, Path, int, int, list]:
     args = parser.parse_args()
 
@@ -101,24 +116,19 @@ def main() -> None:
         log.debug('Image: %s', image_path)
         log.debug('Hash: %s. Distance: %s', image_hash, distance)
 
-        if distance <= max_distance:
-            found += 1
-            log.info('\nFound match!\n%s\n', image_path.as_uri())
-
-            try:
-                continue_ = input('Continue search? [y/n] ')
-            except KeyboardInterrupt:
-                log.info('\nFound %s similar images.', found)
-                sys.exit()
-
-            if continue_ in ('n', 'no'):
-                log.info('Found %s similar images.', found)
-                sys.exit()
-
         processed += 1
         print('Processed %s images' % processed, end='\r')
 
-    log.info('Found %s similar images.', found)
+        if distance <= max_distance:
+            found += 1
+            log.info('\nFound match!\n%s', image_path.as_uri())
+
+            try:
+                ask_if_continue()
+            except SystemExit:
+                break
+
+    log.info('\nFound %s similar images.', found)
 
 
 if __name__ == '__main__':

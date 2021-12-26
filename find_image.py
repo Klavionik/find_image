@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-
+"""
+Find images similar to a given reference image using a perceptual hashing algorithm.
+May work even if the search target (or the reference) if cropped, resized, rotated,
+color-manipulated etc.
+"""
 import argparse
 import logging
 import mimetypes
@@ -14,13 +18,13 @@ log = logging.getLogger('find_image')
 logging.basicConfig(format='%(message)s')
 log.setLevel(logging.INFO)
 
-parser = argparse.ArgumentParser()
+parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter, epilog=__doc__)
 parser.add_argument('file', help='Path to the reference image')
 parser.add_argument('top', help='Path to the top search directory')
 parser.add_argument('-s', '--sensitivity', help='Hashing sensitivity (2 - 8)', type=int, default=7)
 parser.add_argument('-d', '--distance', help='Max. Hamming distance', type=int, default=0)
 parser.add_argument('-e', '--exclude', help='Directories to exclude from search (a comma-separated list)')
-parser.add_argument('--debug', action='store_true')
+parser.add_argument('--debug', action='store_true', help="Output debug messages")
 
 VALID_TYPES = ('image/jpeg', 'image/png')
 

@@ -80,25 +80,25 @@ def main() -> None:
     found = 0
 
     for dirpath, _, files in os.walk(top):
-        cwd = Path(dirpath)
+        directory = Path(dirpath)
 
-        if cwd.resolve().name in excluded:
+        if directory.resolve().name in excluded:
             log.info('Directory %s is excluded, skip', dirpath)
             continue
 
         for file in files:
-            path = cwd / Path(file)
+            filepath = directory / Path(file)
 
-            if cwd / reference != path and is_image(path):
-                image_hash_ = make_hash(path, sensitivity)
-                distance = image_hash_ - reference_hash
+            if reference != filepath and is_image(filepath):
+                image_hash = make_hash(filepath, sensitivity)
+                distance = image_hash - reference_hash
 
-                log.debug('Image: %s', path.resolve())
-                log.debug('Hash: %s. Distance: %s', image_hash_, distance)
+                log.debug('Image: %s', filepath.resolve())
+                log.debug('Hash: %s. Distance: %s', image_hash, distance)
 
                 if distance <= max_distance:
                     found += 1
-                    log.info('\nFound match!\n%s\n', path.resolve().as_uri())
+                    log.info('\nFound match!\n%s\n', filepath.resolve().as_uri())
 
                     try:
                         continue_ = input('Continue search? [y/n] ')

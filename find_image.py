@@ -16,7 +16,7 @@ log.setLevel(logging.INFO)
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='Путь к файлу-образцу')
-parser.add_argument('directory', help='Путь к директории, с которой начнется поиск')
+parser.add_argument('top', help='Путь к директории, с которой начнется поиск')
 parser.add_argument('-s', '--sensitivity', help='Чувствительность хэширования, от 2 до 8', type=int, default=7)
 parser.add_argument('-d', '--distance', help='Максимальное расстояние Хэмминга', type=int, default=0)
 parser.add_argument('-e', '--exclude', help='Директории, которые нужно исключить из поиска (через запятую)')
@@ -82,9 +82,9 @@ def parse_args() -> Tuple[Path, Path, int, int, list]:
     if args.debug:
         log.setLevel(logging.DEBUG)
 
-    directory = Path(args.directory)
+    top = Path(args.top)
 
-    if not directory.exists() or not directory.is_dir():
+    if not top.exists() or not top.is_dir():
         raise SystemExit('Directory does not exist: %s' % args.directory)
 
     reference = Path(args.file)
@@ -99,7 +99,7 @@ def parse_args() -> Tuple[Path, Path, int, int, list]:
 
     exclude = parse_dirs(args.exclude)
 
-    return directory, reference, args.sensitivity, args.distance, exclude
+    return top, reference, args.sensitivity, args.distance, exclude
 
 
 def main() -> None:

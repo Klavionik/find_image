@@ -4,6 +4,8 @@
 алгоритм перцептуального хэширования с использованием DCT (discrete cosine transform).
 
 ## Установка
+Для работы скрипта нужен Python версии 3.7 или выше.
+
 ```shell
 $ git clone https://github.com/Klavionik/find_image.git
 $ cd find_image
@@ -35,5 +37,13 @@ $ ./find_image.py -d 5 reference/jpg .
 Цитата: **Increasing the hash size allows an algorithm to store more detail in its hash, increasing its sensitivity to changes in detail.**
 
 ```shell
-$ ./find_image.py -s 6 reference/jpg .
+$ ./find_image.py -s 6 reference.jpg .
+```
+
+### -e - список директорий, которые будут исключены из поиска
+С помощью ключа `-e` или `--exclude` можно задать через запятую список имен директорий, файлы в которых будут пропущены при поиске.  
+
+```shell
+# Папки с именами "skipme" и "excludethis" будут пропущены
+$ ./find_image.py -e skipme,excludethis reference.jpg .
 ```

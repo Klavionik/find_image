@@ -19,6 +19,7 @@ parser.add_argument('file', help='Путь к файлу-образцу')
 parser.add_argument('directory', help='Путь к директории, с которой начнется поиск')
 parser.add_argument('-s', '--sensitivity', help='Чувствительность хэширования, от 2 до 8', type=int, default=7)
 parser.add_argument('-d', '--distance', help='Максимальное расстояние Хэмминга', type=int, default=0)
+parser.add_argument('-e', '--exclude', help='Директории, которые нужно исключить из поиска (через запятую)')
 parser.add_argument('--debug', action='store_true')
 
 VALID_TYPES = ('image/jpeg', 'image/png')
@@ -33,6 +34,12 @@ def make_hash(path, sensitivity):
 def is_image(file):
     type_, _ = mimetypes.guess_type(file)
     return type_ in VALID_TYPES
+
+
+def parse_dirs(dirs):
+    if dirs is None:
+        return []
+    return dirs.replace(' ', '').split(',')
 
 
 def parse_args():
@@ -56,11 +63,13 @@ def parse_args():
     if not (2 <= sensitivity <= 8):
         raise SystemExit('Sensitivity must be in range from 2 to 8, you passed: %s' % sensitivity)
 
-    return directory, reference, args.sensitivity, args.distance
+    exclude = parse_dirs(args.exclude)
+
+    return directory, reference, args.sensitivity, args.distance, exclude
 
 
 def main():
-    top, reference, sensitivity, max_distance = parse_args()
+    top, reference, sensitivity, max_distance, excluded = parse_args()
     reference_hash = make_hash(reference, sensitivity)
 
     log.info('Search for images similar to %s', reference.name)
@@ -69,8 +78,13 @@ def main():
     processed = 0
     found = 0
 
-    for dirname, _, files in os.walk(top):
-        cwd = Path(dirname)
+    for dirpath, _, files in os.walk(top):
+        cwd = Path(dirpath)
+
+        if cwd.resolve().name in excluded:
+            log.info('Directory %s is excluded, skip', dirpath)
+            continue
+
         for file in files:
             path = cwd / Path(file)
 

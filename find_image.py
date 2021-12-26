@@ -26,9 +26,12 @@ VALID_TYPES = ('image/jpeg', 'image/png')
 
 
 def make_hash(path: Path, sensitivity: int) -> Optional[ImageHash]:
-    with path.open(mode='rb') as fh:
-        image = Image.open(fh)
-        return phash(image, hash_size=sensitivity)
+    try:
+        with path.open(mode='rb') as fh:
+            image = Image.open(fh)
+            return phash(image, hash_size=sensitivity)
+    except Exception as exc:
+        log.info('Error occured when trying to hash an image: %r', exc)
 
 
 def is_image(file: Path) -> bool:
@@ -111,6 +114,10 @@ def main() -> None:
 
     for image_path in next_image(top, reference, excluded):
         image_hash = make_hash(image_path, sensitivity)
+
+        if not image_hash:
+            continue
+
         distance = image_hash - reference_hash
 
         log.debug('Image: %s', image_path)

@@ -6,9 +6,10 @@ import mimetypes
 import os
 import sys
 from pathlib import Path
+from typing import Tuple, Optional
 
 from PIL import Image
-from imagehash import phash
+from imagehash import phash, ImageHash
 
 log = logging.getLogger('find_image')
 logging.basicConfig(format='%(message)s')
@@ -25,24 +26,24 @@ parser.add_argument('--debug', action='store_true')
 VALID_TYPES = ('image/jpeg', 'image/png')
 
 
-def make_hash(path, sensitivity):
+def make_hash(path: Path, sensitivity: int) -> Optional[ImageHash]:
     with path.open(mode='rb') as fh:
         image = Image.open(fh)
         return phash(image, hash_size=sensitivity)
 
 
-def is_image(file):
+def is_image(file: Path) -> bool:
     type_, _ = mimetypes.guess_type(file)
     return type_ in VALID_TYPES
 
 
-def parse_dirs(dirs):
+def parse_dirs(dirs: str) -> list:
     if dirs is None:
         return []
     return dirs.replace(' ', '').split(',')
 
 
-def parse_args():
+def parse_args() -> Tuple[Path, Path, int, int, list]:
     args = parser.parse_args()
 
     if args.debug:
@@ -68,7 +69,7 @@ def parse_args():
     return directory, reference, args.sensitivity, args.distance, exclude
 
 
-def main():
+def main() -> None:
     top, reference, sensitivity, max_distance, excluded = parse_args()
     reference_hash = make_hash(reference, sensitivity)
 

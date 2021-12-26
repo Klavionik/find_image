@@ -6,7 +6,7 @@ import mimetypes
 import os
 import sys
 from pathlib import Path
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Iterator
 
 from PIL import Image
 from imagehash import phash, ImageHash
@@ -41,6 +41,21 @@ def parse_dirs(dirs: str) -> list:
     if dirs is None:
         return []
     return dirs.replace(' ', '').split(',')
+
+
+def next_image(top: Path, reference_path: Path, excluded: list) -> Iterator[Path]:
+    for dirpath, _, files in os.walk(top):
+        directory = Path(dirpath)
+
+        if directory.resolve().name in excluded:
+            log.info('Directory %s is excluded, skip', dirpath)
+            continue
+
+        for file in files:
+            filepath = directory / Path(file)
+
+            if reference_path != filepath and is_image(filepath):
+                yield filepath.resolve()
 
 
 def parse_args() -> Tuple[Path, Path, int, int, list]:
@@ -79,39 +94,29 @@ def main() -> None:
     processed = 0
     found = 0
 
-    for dirpath, _, files in os.walk(top):
-        directory = Path(dirpath)
+    for image_path in next_image(top, reference, excluded):
+        image_hash = make_hash(image_path, sensitivity)
+        distance = image_hash - reference_hash
 
-        if directory.resolve().name in excluded:
-            log.info('Directory %s is excluded, skip', dirpath)
-            continue
+        log.debug('Image: %s', image_path)
+        log.debug('Hash: %s. Distance: %s', image_hash, distance)
 
-        for file in files:
-            filepath = directory / Path(file)
+        if distance <= max_distance:
+            found += 1
+            log.info('\nFound match!\n%s\n', image_path.as_uri())
 
-            if reference != filepath and is_image(filepath):
-                image_hash = make_hash(filepath, sensitivity)
-                distance = image_hash - reference_hash
+            try:
+                continue_ = input('Continue search? [y/n] ')
+            except KeyboardInterrupt:
+                log.info('\nFound %s similar images.', found)
+                sys.exit()
 
-                log.debug('Image: %s', filepath.resolve())
-                log.debug('Hash: %s. Distance: %s', image_hash, distance)
+            if continue_ in ('n', 'no'):
+                log.info('Found %s similar images.', found)
+                sys.exit()
 
-                if distance <= max_distance:
-                    found += 1
-                    log.info('\nFound match!\n%s\n', filepath.resolve().as_uri())
-
-                    try:
-                        continue_ = input('Continue search? [y/n] ')
-                    except KeyboardInterrupt:
-                        log.info('\nFound %s similar images.', found)
-                        sys.exit()
-
-                    if continue_ in ('n', 'no'):
-                        log.info('Found %s similar images.', found)
-                        sys.exit()
-
-            processed += 1
-            print('Processed %s images' % processed, end='\r')
+        processed += 1
+        print('Processed %s images' % processed, end='\r')
 
     log.info('Found %s similar images.', found)
 

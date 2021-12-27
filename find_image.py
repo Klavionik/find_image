@@ -64,7 +64,7 @@ def next_image(top: Path, reference_path: Path, excluded: list) -> Iterator[Path
                 yield filepath.resolve()
 
 
-def ask_if_continue():
+def ask_if_continue() -> None:
     kbinterrupt = False
     answer = None
 
